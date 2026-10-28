@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Калькулятор налоговой льготы</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600&display=swap">
+<style>
+/* Design system: Кабинет ИСЖ (warm off-white page, bg-2 / white surfaces, black pills, one pink accent, no shadows).
+   Layout: inputs on bg-2 at left, results as product-style cards at right; trainer mode adds notes in peach panels. The system has no dark theme, so this page is light only by choice. */
+:root{
+  --white:#ffffff; --bg:#fdfbfa; --bg-2:#f3f1f0; --stroke:#c1c7cd80; --grey-2:#c1c7cd; --grey:#767676;
+  --text:#21272a; --black:#141414; --pink:#ea67931a; --accent:#ea6793; --blue:#8fa7d7;
+  --green-chip:#5aff7326; --blue-chip:#5a91ff26; --peach-chip:#ff9f5a26;
+  --sel-from:#fdedf2; --sel-to:#ebf1ff;
+  --space-4:4px; --space-8:8px; --space-12:12px; --space-16:16px; --space-20:20px; --space-24:24px; --space-28:28px; --space-32:32px; --space-48:48px; --space-64:64px;
+  --radius-16:16px; --radius-20:20px; --radius-24:24px; --radius-32:32px; --radius-36:36px; --radius-100:100px;
+  --font-sans:Onest,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:300 16px/1.4 var(--font-sans);letter-spacing:-0.02em;-webkit-font-smoothing:antialiased;
+  padding-block:var(--space-32) var(--space-64);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3,h4,p,dl,dd,ul{margin:0}
+h1,h2,h3{font-weight:400;text-wrap:balance}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:var(--space-32)}
+.caps{font-size:14px;line-height:20px;font-weight:300;letter-spacing:.05em;text-transform:uppercase;color:var(--grey)}
+.label{font-size:14px;line-height:20px;font-weight:500}
+.small{font-size:12px;line-height:16px;color:var(--grey)}
+header{display:flex;flex-wrap:wrap;gap:var(--space-16) var(--space-32);align-items:flex-end;justify-content:space-between}
+header h1{font-size:clamp(30px,5vw,54px);line-height:1.08;letter-spacing:-0.02em;margin-top:var(--space-8)}
+.pills{display:inline-flex;gap:var(--space-4);background:var(--bg-2);padding:var(--space-4);border-radius:var(--radius-100)}
+button{font-family:inherit;letter-spacing:inherit}
+.pill{border:0;background:transparent;color:var(--text);font-size:16px;font-weight:300;height:40px;padding:0 var(--space-20);border-radius:var(--radius-100);cursor:pointer;white-space:nowrap}
+.pill[aria-pressed="true"]{background:var(--white)}
+.on-grey .pills{background:var(--white)}
+.on-grey .pill[aria-pressed="true"]{background:var(--black);color:var(--white)}
+.btn{border:0;background:var(--black);color:var(--white);font-size:14px;line-height:16px;font-weight:400;padding:var(--space-16) var(--space-28);border-radius:var(--radius-36);cursor:pointer}
+.btn.accent{background:var(--accent)}
+.btn.outline{background:var(--bg-2);color:var(--text)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:var(--space-32);align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.inputs{position:sticky;top:var(--space-16);background:var(--bg-2);border-radius:var(--radius-32);padding:var(--space-28);display:flex;flex-direction:column;gap:var(--space-24);min-width:0}
+@media(max-width:900px){.inputs{position:static}}
+.field{display:flex;flex-direction:column;gap:var(--space-8);min-width:0}
+input[type=text],input[type=number]{font:inherit;font-weight:400;color:var(--text);background:var(--white);border:0;border-radius:var(--radius-16);padding:14px var(--space-16);width:100%;min-width:0;letter-spacing:inherit}
+#amount{font-size:24px;line-height:30px}
+input[type=range]{width:100%;accent-color:var(--black);margin:0}
+.presets{display:flex;flex-wrap:wrap;gap:var(--space-8)}
+.preset{border:0;background:var(--white);color:var(--text);font-size:14px;font-weight:300;height:36px;padding:0 var(--space-16);border-radius:var(--radius-100);cursor:pointer}
+.preset[aria-pressed="true"]{background:var(--black);color:var(--white)}
+details summary{cursor:pointer;font-size:14px;font-weight:500}
+details .set{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-12);margin-top:var(--space-16)}
+details .small{margin-top:var(--space-12);color:var(--text);opacity:.7}
+.main{display:flex;flex-direction:column;gap:var(--space-48);min-width:0}
+.hero{display:flex;flex-direction:column;gap:var(--space-12);align-items:flex-start}
+.big{font-size:clamp(46px,9vw,84px);line-height:1.1;letter-spacing:-0.03em;font-weight:400;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;padding:var(--space-8) var(--space-16);border-radius:var(--radius-100);background:var(--blue-chip);font-size:14px;line-height:16px;font-weight:400}
+.chip.green{background:var(--green-chip)} .chip.peach{background:var(--peach-chip)}
+.chip.dark{background:var(--black);color:var(--white)}
+.hero p.lead{font-size:18px;line-height:26px;max-width:58ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:var(--space-16)}
+.card{background:var(--bg-2);border-radius:var(--radius-32);padding:var(--space-16);min-width:0}
+.card .in{background:var(--white);border-radius:var(--radius-24);padding:var(--space-28);display:flex;flex-direction:column;gap:var(--space-20);height:100%;min-width:0}
+.card.rec{background:linear-gradient(to right,var(--sel-from),var(--sel-to))}
+.card h3{font-size:28px;line-height:1.1;letter-spacing:-0.02em}
+.chips{display:flex;flex-wrap:wrap;gap:var(--space-8)}
+.conds{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-8)}
+.cond{background:var(--bg);border-radius:var(--radius-16);padding:var(--space-16);display:flex;flex-direction:column;gap:var(--space-4);min-width:0}
+.cond dt{font-size:14px;line-height:16px;font-weight:400;color:var(--grey)}
+.cond dd{font-size:18px;line-height:24px;font-weight:400;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.cond.hl{background:var(--green-chip)} .cond.hl dt{color:var(--text)}
+.bars{display:flex;flex-direction:column;gap:var(--space-8)}
+.bar{display:grid;grid-template-columns:84px minmax(0,1fr);gap:var(--space-12);align-items:center;font-size:14px;color:var(--grey)}
+.bar .t{display:flex;align-items:center;gap:var(--space-8);min-width:0}
+.bar i{display:block;height:20px;border-radius:var(--radius-100);background:var(--grey-2);min-width:6px;transition:width .3s}
+.bar.s i{background:var(--blue)}
+.bar b{font-weight:400;color:var(--text);white-space:nowrap;font-variant-numeric:tabular-nums}
+.notes{display:grid;gap:var(--space-12)}
+.note{border-radius:var(--radius-20);padding:var(--space-20);font-size:16px;line-height:22px;background:var(--blue-chip)}
+.note.warn{background:var(--peach-chip)}
+.note b{font-weight:500}
+.sec-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--space-16)}
+.sec-h h2{font-size:clamp(28px,4vw,38px);line-height:1.1;letter-spacing:-0.02em}
+.offer-wrap{background:var(--bg-2);border-radius:var(--radius-32);padding:var(--space-28);display:flex;flex-direction:column;gap:var(--space-20)}
+.offer{display:flex;flex-direction:column;gap:var(--space-20)}
+.offer .conds{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.offer .cond{background:var(--white)} .offer .cond.hl{background:var(--green-chip)}
+.offer pre{margin:0;white-space:pre-wrap;font:inherit;font-size:15px;line-height:22px;background:var(--white);border-radius:var(--radius-16);padding:var(--space-20)}
+.row{display:flex;flex-wrap:wrap;gap:var(--space-16);align-items:center}
+.ok{font-size:14px;font-weight:500}
+.trainer{display:none;background:var(--peach-chip);border-radius:var(--radius-20);padding:var(--space-20);flex-direction:column;gap:var(--space-8);font-size:15px;line-height:21px}
+body.t-on .trainer{display:flex}
+.trainer ul{padding-left:18px;display:grid;gap:var(--space-4)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:var(--space-8)}
+.rules .cond dd{font-size:16px;line-height:22px;font-weight:300}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="caps">НСЖ и Юнит Линк от 5 лет · ФЗ N 919131-8</div>
+      <h1>Налоговая льгота: сколько клиент оставит себе</h1>
+    </div>
+    <div class="pills" role="group" aria-label="Режим">
+      <button class="pill" id="m-client" aria-pressed="true">Клиент</button>
+      <button class="pill" id="m-trainer" aria-pressed="false">Тренер</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="inputs on-grey" aria-label="Параметры клиента">
+      <div class="field">
+        <label class="label" for="name">Имя клиента для предложения</label>
+        <input type="text" id="name" value="Иван Иванович" autocomplete="off">
+      </div>
+      <div class="field">
+        <label class="label" for="amount">Сумма взноса, ₽</label>
+        <input type="text" inputmode="numeric" id="amount" value="50 000 000">
+        <input type="range" id="range" min="1000000" max="100000000" step="500000" value="50000000" aria-label="Сумма взноса">
+        <div class="presets" id="presets"></div>
+      </div>
+      <div class="field">
+        <span class="label">Что важнее клиенту</span>
+        <div class="pills" id="prio" role="group" aria-label="Приоритет" style="align-self:flex-start">
+          <button class="pill" data-p="guarantee" aria-pressed="true">Гарантия</button>
+          <button class="pill" data-p="growth" aria-pressed="false">Больше дохода</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="term">Срок Юнит Линк, лет</label>
+        <input type="number" id="term" min="5" max="15" value="5">
+      </div>
+      <details>
+        <summary>Ставки и лимиты</summary>
+        <div class="set">
+          <div class="field"><label class="label" for="s-gss">ГСС фиксированного дохода, %</label><input type="number" id="s-gss" value="160" step="1"></div>
+          <div class="field"><label class="label" for="s-ul">Юнит Линк, % в год</label><input type="number" id="s-ul" value="16" step="0.5"></div>
+          <div class="field"><label class="label" for="s-tax">НДФЛ, %</label><input type="number" id="s-tax" value="15" step="1"></div>
+          <div class="field"><label class="label" for="s-lim">Лимит дохода, млн ₽</label><input type="number" id="s-lim" value="30" step="1"></div>
+        </div>
+        <p class="small">Значения из памятки. Сверьте с действующими условиями и ставкой НДФЛ клиента перед показом.</p>
+      </details>
+    </section>
+
+    <div class="main">
+      <section aria-live="polite" style="display:flex;flex-direction:column;gap:var(--space-32)">
+        <div class="hero">
+          <span class="caps">Выгода от налоговой льготы</span>
+          <div class="big" id="saveBig">—</div>
+          <span class="chip green" id="saveChip"></span>
+          <p class="lead" id="saveText"></p>
+        </div>
+        <div class="trainer">
+          <b>Как подать</b>
+          <ul>
+            <li>Начните с цифры выгоды, а не с названия продукта: «Вот сколько вы оставляете себе, а не отдаёте государству».</li>
+            <li>Клиенту ничего подавать не нужно: страховая оформляет льготу сама.</li>
+            <li>Сразу назовите условие: вывод средств раньше 5 лет отменяет льготу.</li>
+          </ul>
+        </div>
+        <div class="cards" id="cards"></div>
+        <div class="notes" id="limitMsg"></div>
+      </section>
+
+      <section style="display:flex;flex-direction:column;gap:var(--space-20)">
+        <div class="sec-h">
+          <h2>Предложение клиенту</h2>
+          <button class="btn accent" id="makeOffer">Сформировать предложение</button>
+        </div>
+        <div class="offer-wrap">
+          <p id="offerEmpty">Нажмите кнопку: калькулятор подберёт продукт под сумму и приоритет клиента и соберёт готовый текст для чата.</p>
+          <div class="offer" id="offer" hidden></div>
+        </div>
+      </section>
+
+      <section style="display:flex;flex-direction:column;gap:var(--space-20)">
+        <h2 style="font-size:clamp(28px,4vw,38px);line-height:1.1">Условия льготы</h2>
+        <dl class="rules" style="margin:0">
+          <div class="cond"><dt>Срок</dt><dd>Полисы от 5 лет: НСЖ и Юнит Линк</dd></div>
+          <div class="cond"><dt>Договоры</dt><dd>Не более 3 одновременно</dd></div>
+          <div class="cond"><dt>Взносы и вывод</dt><dd>Допвзносы возможны, любой вывод до 5 лет отменяет льготу</dd></div>
+          <div class="cond"><dt>Налог</dt><dd>Доход до лимита за налоговый период не облагается НДФЛ</dd></div>
+          <div class="cond"><dt>Другие льготы</dt><dd>Не пересекается с ИИС-3 и ПДС</dd></div>
+          <div class="cond"><dt>Оформление</dt><dd>Заявление не нужно, страховая всё сделает сама</dd></div>
+        </dl>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+var $=function(id){return document.getElementById(id)};
+var PRESETS=[5e6,15e6,30e6,50e6];
+var state={amount:50e6,prio:'guarantee'};
+var NOTES={
+  fk:{pitch:'Накопительное страхование жизни с гарантированным доходом. Клиент заранее знает сумму на выходе.',
+      who:'Тем, кому важна предсказуемость, и тем, у кого крупная сумма на 5 лет.',
+      say:'«Вы заранее видите, сколько получите, и с этого дохода налог не платите.»'},
+  ul:{pitch:'Инвестиционное страхование: доход зависит от стратегии, 16% в год здесь только пример.',
+      who:'Тем, кто готов к рынку ради большего дохода и понимает, что он не гарантирован.',
+      say:'«Потенциал выше, и так же, как и в фиксированном доходе, налог только с части выше лимита.»'}
+};
+function settings(){
+  return {gss:+$('s-gss').value/100,ul:+$('s-ul').value/100,tax:+$('s-tax').value/100,lim:(+$('s-lim').value)*1e6,term:Math.max(5,+$('term').value||5)};
+}
+function calc(kind,P,s){
+  var years=kind==='fk'?5:s.term;
+  var income=kind==='fk'?P*(s.gss-1):P*s.ul*years;
+  var base=Math.max(0,income-s.lim);
+  var taxWith=base*s.tax, taxWithout=income*s.tax;
+  return {kind:kind,years:years,P:P,income:income,base:base,taxWith:taxWith,taxWithout:taxWithout,
+    saved:taxWithout-taxWith,net:income-taxWith,netWithout:income-taxWithout,total:P+income-taxWith,
+    optimal:s.lim/(kind==='fk'?(s.gss-1):(s.ul*years))};
+}
+function fmtFull(n){return Math.round(n).toLocaleString('ru-RU').replace(/ /g,' ')}
+function fmt(n){
+  if(Math.abs(n)>=1e6){return String(Math.round(n/1e4)/100).replace('.',',')+' млн ₽'}
+  return fmtFull(n)+' ₽';
+}
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function recommend(r){return state.prio==='growth'&&r.ul.net>r.fk.net?'ul':'fk'}
+function bar(label,v,max,cls){
+  var w=max>0?Math.max(2,v/max*100):2;
+  return '<div class="bar '+(cls||'')+'"><span>'+label+'</span><div class="t"><i style="width:'+w+'%"></i><b>'+fmt(v)+'</b></div></div>';
+}
+function card(r,max,isRec,s){
+  var name=r.kind==='fk'?'Фиксированный доход':'Юнит Линк';
+  var n=NOTES[r.kind];
+  var line=r.kind==='fk'?'Гарантия '+Math.round(s.gss*100)+'% за 5 лет':(Math.round(s.ul*1000)/10)+'% в год, '+r.years+' лет, не гарантировано';
+  return '<article class="card'+(isRec?' rec':'')+'"><div class="in">'
+   +'<div class="chips">'+(isRec?'<span class="chip dark">Рекомендуем</span>':'')+'<span class="chip'+(r.kind==='fk'?'':' peach')+'">'+(r.kind==='fk'?'НСЖ':'Инвестиционное')+'</span></div>'
+   +'<div><h3>'+name+'</h3><p class="small" style="margin-top:8px">'+line+'</p></div>'
+   +'<dl class="conds" style="margin:0">'
+   +'<div class="cond"><dt>Доход по полису</dt><dd>'+fmt(r.income)+'</dd></div>'
+   +'<div class="cond"><dt>База для налога</dt><dd>'+fmt(r.base)+'</dd></div>'
+   +'<div class="cond"><dt>Доход после налога</dt><dd>'+fmt(r.net)+'</dd></div>'
+   +'<div class="cond hl"><dt>Выгода</dt><dd>'+fmt(r.saved)+'</dd></div></dl>'
+   +'<div class="bars">'+bar('Без льготы',r.netWithout,max)+bar('Со льготой',r.net,max,'s')+'</div>'
+   +'<div class="trainer"><b>Как продавать</b><ul><li>'+n.pitch+'</li><li><b>Кому:</b> '+n.who+'</li><li>Фраза: '+n.say+'</li></ul></div>'
+   +'</div></article>';
+}
+function render(){
+  var s=settings(),P=state.amount;
+  var r={fk:calc('fk',P,s),ul:calc('ul',P,s)};
+  var rec=recommend(r),best=r[rec],nm=rec==='fk'?'Фиксированный доход':'Юнит Линк';
+  var max=Math.max(r.fk.net,r.ul.net,1);
+  $('cards').innerHTML=card(r.fk,max,rec==='fk',s)+card(r.ul,max,rec==='ul',s);
+  $('saveBig').textContent=fmt(best.saved);
+  $('saveChip').textContent=nm+' · взнос '+fmt(P)+' · '+best.years+' лет';
+  $('saveText').textContent='Клиент оставляет себе '+fmt(best.net)+' дохода вместо '+fmt(best.netWithout)+' без льготы.';
+  var msg='';
+  [r.fk,r.ul].forEach(function(x){
+    var n2=x.kind==='fk'?'Фиксированный доход':'Юнит Линк';
+    if(x.income>s.lim){
+      msg+='<div class="note warn"><b>'+n2+'.</b> Доход '+fmt(x.income)+' выше лимита, налог берётся только с превышения ('+fmt(x.base)+'). Взнос до <b>'+fmt(x.optimal)+'</b> укладывается в лимит полностью.</div>';
+    }else{
+      msg+='<div class="note"><b>'+n2+'.</b> Весь доход ('+fmt(x.income)+') не облагается налогом. Лимит можно заполнить взносом до <b>'+fmt(x.optimal)+'</b>.</div>';
+    }
+  });
+  $('limitMsg').innerHTML=msg;
+  if(!$('offer').hidden)buildOffer();
+}
+function buildOffer(){
+  var s=settings(),P=state.amount,nm=$('name').value.trim()||'клиент';
+  var r={fk:calc('fk',P,s),ul:calc('ul',P,s)};
+  var rec=recommend(r),x=r[rec],other=r[rec==='fk'?'ul':'fk'];
+  var pn=rec==='fk'?'Фиксированный доход':'Юнит Линк';
+  var why=rec==='fk'
+    ?'Гарантированный доход '+Math.round(s.gss*100)+'% за 5 лет: сумма на выходе известна заранее.'
+    :'Доход в примере '+(Math.round(s.ul*1000)/10)+'% в год, он зависит от стратегии и не гарантирован.';
+  var tip=P>x.optimal*1.0001
+    ?'Взнос выше '+fmt(x.optimal)+': налог удерживается с части дохода сверх лимита.'
+    :(x.optimal>P*1.0001?'Лимит льготы заполнен не полностью: взнос можно довести до '+fmt(x.optimal)+'.':'Взнос полностью использует лимит льготы.');
+  var text='Здравствуйте, '+nm+'!\n\nПредложение: '+pn+', взнос '+fmtFull(P)+' ₽ на '+x.years+' лет.\n'
+    +'• Доход по полису: '+fmt(x.income)+'\n'
+    +'• Налог со льготой: '+fmt(x.taxWith)+' (без льготы было бы '+fmt(x.taxWithout)+')\n'
+    +'• Выгода по налогу: '+fmt(x.saved)+'\n'
+    +'• К получению через '+x.years+' лет: '+fmt(x.total)+'\n\n'
+    +why+'\n'+tip+'\n\n'
+    +'Условия льготы: срок от 5 лет, не более 3 договоров, вывод средств раньше 5 лет отменяет льготу. Заявление подавать не нужно, страховая оформит льготу сама.'
+    +(rec==='ul'?'\nРасчёт иллюстративный, доходность не гарантирована.':'');
+  $('offer').hidden=false;$('offerEmpty').hidden=true;
+  $('offer').innerHTML='<div class="chips"><span class="chip dark">'+pn+'</span><span class="chip green">Выгода '+fmt(x.saved)+'</span></div>'
+    +'<h3 style="font-size:28px;line-height:1.1">Для клиента: '+esc(nm)+'</h3>'
+    +'<dl class="conds" style="margin:0"><div class="cond"><dt>Взнос</dt><dd>'+fmt(P)+'</dd></div><div class="cond"><dt>Срок</dt><dd>'+x.years+' лет</dd></div><div class="cond"><dt>Доход по полису</dt><dd>'+fmt(x.income)+'</dd></div><div class="cond hl"><dt>Выгода по налогу</dt><dd>'+fmt(x.saved)+'</dd></div><div class="cond"><dt>К получению</dt><dd>'+fmt(x.total)+'</dd></div></dl>'
+    +'<div class="note">'+why+' '+tip+(other?' Для сравнения, '+(rec==='fk'?'Юнит Линк':'Фиксированный доход')+': доход после налога '+fmt(other.net)+'.':'')+'</div>'
+    +'<div class="trainer"><b>Для менеджера</b><ul><li>Перед отправкой проверьте ставки в настройках и ставку НДФЛ клиента.</li><li>«А если понадобятся деньги?» Сразу скажите, что вывод до 5 лет отменяет льготу, допвзносы возможны.</li><li>«У меня есть ИИС». Льготы не пересекаются, продукты не мешают друг другу.</li></ul></div>'
+    +'<pre id="offerText">'+esc(text)+'</pre>'
+    +'<div class="row"><button class="btn" id="copy">Скопировать текст</button><span class="ok" id="copied" hidden>Скопировано</span></div>';
+  $('copy').onclick=function(){
+    var ok=function(){$('copied').hidden=false;setTimeout(function(){$('copied').hidden=true},2000)};
+    var fb=function(){var g=document.createRange();g.selectNodeContents($('offerText'));var sel=getSelection();sel.removeAllRanges();sel.addRange(g)};
+    try{navigator.clipboard.writeText(text).then(ok,fb)}catch(e){fb()}
+  };
+}
+function setAmount(v,skipInput){
+  state.amount=Math.max(0,v||0);
+  if(!skipInput)$('amount').value=fmtFull(state.amount);
+  $('range').value=Math.min(state.amount,100e6);
+  document.querySelectorAll('.preset').forEach(function(c){c.setAttribute('aria-pressed',String(+c.dataset.v===state.amount))});
+  render();
+}
+$('presets').innerHTML=PRESETS.map(function(v){return '<button class="preset" data-v="'+v+'" aria-pressed="false">'+(v/1e6)+' млн</button>'}).join('');
+$('presets').onclick=function(e){var v=e.target.dataset&&e.target.dataset.v;if(v)setAmount(+v)};
+$('amount').oninput=function(){setAmount(+this.value.replace(/\D/g,''),true)};
+$('amount').onblur=function(){this.value=fmtFull(state.amount)};
+$('range').oninput=function(){setAmount(+this.value)};
+['s-gss','s-ul','s-tax','s-lim','term'].forEach(function(id){$(id).oninput=render});
+$('name').oninput=function(){if(!$('offer').hidden)buildOffer()};
+$('prio').onclick=function(e){var p=e.target.dataset&&e.target.dataset.p;if(!p)return;state.prio=p;
+  this.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.p===p))});render()};
+$('makeOffer').onclick=buildOffer;
+function setMode(t){document.body.classList.toggle('t-on',t);
+  $('m-trainer').setAttribute('aria-pressed',String(t));$('m-client').setAttribute('aria-pressed',String(!t))}
+$('m-client').onclick=function(){setMode(false)};
+$('m-trainer').onclick=function(){setMode(true)};
+setAmount(50e6);
+</script>
+</body>
+</html>
